@@ -1,0 +1,15 @@
+*.class
+*.log
+.bsp/
+
+### IDEA
+.idea/
+
+### SBT
+target/
+
+## Mac OS
+.DS_Store
+
+### Approvals
+*.received

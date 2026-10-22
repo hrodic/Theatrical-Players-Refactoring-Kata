@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="TheatricalPlayersRefactoringKata.Tests/TheatricalPlayersRefactoringKata.Tests.csproj" />
+  <Project Path="TheatricalPlayersRefactoringKata/TheatricalPlayersRefactoringKata.csproj" />
+</Solution>
