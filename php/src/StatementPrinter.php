@@ -18,48 +18,62 @@ class StatementPrinter
         $volumeCredits = 0;
 
         $result = "Statement for {$invoice->customer}\n";
-        $format = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
 
         foreach ($invoice->performances as $performance) {
+            // lookup the play for this performance
             $play = $plays[$performance->playId];
-            $thisAmount = 0;
 
-            switch ($play->type) {
-                case 'tragedy':
-                    $thisAmount = 40000;
-                    if ($performance->audience > 30) {
-                        $thisAmount += 1000 * ($performance->audience - 30);
-                    }
-                    break;
+            $performanceAmount = $this->calculatePerformanceAmount($performance, $play);
 
-                case 'comedy':
-                    $thisAmount = 30000;
-                    if ($performance->audience > 20) {
-                        $thisAmount += 10000 + 500 * ($performance->audience - 20);
-                    }
-                    $thisAmount += 300 * $performance->audience;
-                    break;
-
-                default:
-                    throw new Error("Unknown type: {$play->type}");
-            }
-
+            // credit rules ---
             // add volume credits
             $volumeCredits += max($performance->audience - 30, 0);
             // add extra credit for every ten comedy attendees
             if ($play->type === 'comedy') {
                 $volumeCredits += floor($performance->audience / 5);
             }
+            // end credit rules ---
 
-            // print line for this order
-            $result .= "  {$play->name}: {$format->formatCurrency($thisAmount / 100, 'USD')} ";
+            // formatting logic: print line for this order
+            $result .= "  {$play->name}: {$this->formatAsUSD($performanceAmount)} ";
             $result .= "({$performance->audience} seats)\n";
 
-            $totalAmount += $thisAmount;
+            $totalAmount += $performanceAmount;
         }
 
-        $result .= "Amount owed is {$format ->formatCurrency($totalAmount / 100, 'USD')}\n";
+        $result .= "Amount owed is {$this->formatAsUSD($totalAmount)}\n";
         $result .= "You earned {$volumeCredits} credits";
         return $result;
+    }
+
+    private function calculatePerformanceAmount(Performance $performance, Play $play): int
+    {
+        switch ($play->type) {
+            case 'tragedy':
+                $amount = 40000;
+                if ($performance->audience > 30) {
+                    $amount += 1000 * ($performance->audience - 30);
+                }
+                break;
+
+            case 'comedy':
+                $amount = 30000;
+                if ($performance->audience > 20) {
+                    $amount += 10000 + 500 * ($performance->audience - 20);
+                }
+                $amount += 300 * $performance->audience;
+                break;
+
+            default:
+                throw new Error("Unknown type: {$play->type}");
+        }
+
+        return $amount;
+    }
+
+    private function formatAsUSD(int $amount): string
+    {
+        $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
+        return $formatter->formatCurrency($amount / 100, 'USD');
     }
 }
