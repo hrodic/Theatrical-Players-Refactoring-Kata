@@ -11,44 +11,44 @@ final class StatementPrinter
 {
     public function print(Invoice $invoice, array $plays): string
     {
-        $result = "Statement for {$invoice->customer}\n";
+        return $this->renderPlainText($this->createStatement($invoice, $plays));
+    }
 
-        foreach ($invoice->performances as $performance) {
-            $result .= $this->formatPerformanceLine($performance, $plays);
+    private function renderPlainText(Statement $statement): string
+    {
+        $result = "Statement for {$statement->customer}\n";
+
+        foreach ($statement as $line) {
+            $formattedAmount = $this->formatAsUSD($line->amount);
+            $result .= "  {$line->playName}: {$formattedAmount} ({$line->audience} seats)\n";
         }
 
-        $result .= "Amount owed is {$this->formatAsUSD($this->totalAmount($invoice, $plays))}\n";
-        $result .= "You earned {$this->totalVolumeCredits($invoice, $plays)} credits";
+        $result .= "Amount owed is {$this->formatAsUSD($statement->totalAmount())}\n";
+        $result .= "You earned {$statement->totalVolumeCredits()} credits";
 
         return $result;
     }
 
-    private function formatPerformanceLine(Performance $performance, array $plays): string
+    private function createStatement(Invoice $invoice, array $plays): Statement
+    {
+        $lines = array_map(
+            fn(Performance $performance): StatementLine =>
+            $this->createStatementLine($performance, $plays),
+            $invoice->performances,
+        );
+
+        return new Statement($invoice->customer, ...$lines);
+    }
+
+    private function createStatementLine(Performance $performance, array $plays): StatementLine
     {
         $play = $this->playForPerformance($performance, $plays);
-        $amount = $this->calculatePerformanceAmount($performance, $plays);
-
-        return "  {$play->name}: {$this->formatAsUSD($amount)} ({$performance->audience} seats)\n";
-    }
-
-    private function totalAmount(Invoice $invoice, array $plays): int
-    {
-        $total = 0;
-        foreach ($invoice->performances as $performance) {
-            $total += $this->calculatePerformanceAmount($performance, $plays);
-        }
-
-        return $total;
-    }
-
-    private function totalVolumeCredits(Invoice $invoice, array $plays): int
-    {
-        $credits = 0;
-        foreach ($invoice->performances as $performance) {
-            $credits += $this->calculateVolumeCredits($performance, $plays);
-        }
-
-        return $credits;
+        return new StatementLine(
+            playName: $play->name,
+            audience: $performance->audience,
+            amount: $this->calculatePerformanceAmount($performance, $plays),
+            volumeCredits: $this->calculateVolumeCredits($performance, $plays)
+        );
     }
 
     private function calculatePerformanceAmount(Performance $performance, array $plays): int
