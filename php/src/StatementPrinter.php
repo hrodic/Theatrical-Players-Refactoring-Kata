@@ -7,46 +7,62 @@ namespace Theatrical;
 use Error;
 use NumberFormatter;
 
-class StatementPrinter
+final class StatementPrinter
 {
     /**
      * @param array<string, Play> $plays
      */
     public function print(Invoice $invoice, array $plays): string
     {
-        $totalAmount = 0;
-        $volumeCredits = 0;
-
         $result = "Statement for {$invoice->customer}\n";
 
         foreach ($invoice->performances as $performance) {
-            // lookup the play for this performance
-            $play = $plays[$performance->playId];
-
-            // amount for this order
-            $performanceAmount = $this->calculatePerformanceAmount($performance, $play);
-
-            $volumeCredits += $this->calculateVolumeCredits($performance, $play);
-            // formatting logic: print line for this order
-
-            $result .= "  {$play->name}: {$this->formatAsUSD($performanceAmount)} ";
-            $result .= "({$performance->audience} seats)\n";
-
-            $totalAmount += $performanceAmount;
+            $result .= $this->formatPerformanceLine($performance, $plays);
         }
 
-        $result .= "Amount owed is {$this->formatAsUSD($totalAmount)}\n";
-        $result .= "You earned {$volumeCredits} credits";
+        $result .= "Amount owed is {$this->formatAsUSD($this->totalAmount($invoice, $plays))}\n";
+        $result .= "You earned {$this->totalVolumeCredits($invoice, $plays)} credits";
+
         return $result;
     }
 
-    private function calculateVolumeCredits(Performance $performance, Play $play): int
+    private function formatPerformanceLine(Performance $performance, array $plays): string
     {
-        $volumeCredits = max($performance->audience - 30, 0);
-        if ($play->type === 'comedy') {
-            $volumeCredits += intdiv($performance->audience, 5);
+        $play = $this->playForPerformance($performance, $plays);
+        $amount = $this->calculatePerformanceAmount($performance, $plays);
+
+        return "  {$play->name}: {$this->formatAsUSD($amount)} ({$performance->audience} seats)\n";
+    }
+
+    private function totalAmount(Invoice $invoice, array $plays): int
+    {
+        $total = 0;
+        foreach ($invoice->performances as $performance) {
+            $total += $this->calculatePerformanceAmount($performance, $plays);
         }
-        return $volumeCredits;
+
+        return $total;
+    }
+
+    private function totalVolumeCredits(Invoice $invoice, array $plays): int
+    {
+        $credits = 0;
+        foreach ($invoice->performances as $performance) {
+            $credits += $this->calculateVolumeCredits($performance, $plays);
+        }
+
+        return $credits;
+    }
+
+    private function calculatePerformanceAmount(Performance $performance, array $plays): int
+    {
+        $play = $this->playForPerformance($performance, $plays);
+
+        return match ($play->type) {
+            'tragedy' => $this->calculateTragedyAmount($performance),
+            'comedy' => $this->calculateComedyAmount($performance),
+            default => throw new Error("Unknown type: {$play->type}"),
+        };
     }
 
     private function calculateTragedyAmount(Performance $performance): int
@@ -55,6 +71,7 @@ class StatementPrinter
         if ($performance->audience > 30) {
             $amount += 1000 * ($performance->audience - 30);
         }
+
         return $amount;
     }
 
@@ -64,27 +81,31 @@ class StatementPrinter
         if ($performance->audience > 20) {
             $amount += 10000 + 500 * ($performance->audience - 20);
         }
-        $amount += 300 * $performance->audience;
-        return $amount;
+
+        return $amount + 300 * $performance->audience;
     }
 
-    private function calculatePerformanceAmount(Performance $performance, Play $play): int
+    private function calculateVolumeCredits(Performance $performance, array $plays): int
     {
-        switch ($play->type) {
-            case 'tragedy':
-                return $this->calculateTragedyAmount($performance);
+        $play = $this->playForPerformance($performance, $plays);
+        $credits = max($performance->audience - 30, 0);
 
-            case 'comedy':
-                return $this->calculateComedyAmount($performance);
-
-            default:
-                throw new Error("Unknown type: {$play->type}");
+        if ($play->type === 'comedy') {
+            $credits += intdiv($performance->audience, 5);
         }
+
+        return $credits;
     }
 
-    private function formatAsUSD(int $amount): string
+    private function playForPerformance(Performance $performance, array $plays): Play
+    {
+        return $plays[$performance->playId];
+    }
+
+    private function formatAsUSD(int $amountInCents): string
     {
         $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
-        return $formatter->formatCurrency($amount / 100, 'USD');
+
+        return (string) $formatter->formatCurrency($amountInCents / 100, 'USD');
     }
 }

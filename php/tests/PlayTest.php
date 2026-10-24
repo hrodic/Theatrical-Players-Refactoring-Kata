@@ -14,7 +14,7 @@ final class PlayTest extends TestCase
         // arrange
         $sut = new Play('Rock day', 'Rock');
         // act
-        $result = (string)$sut;
+        $result = (string) $sut;
         // assert
         $this->assertSame('Rock day : Rock', $result);
     }
