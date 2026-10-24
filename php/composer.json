@@ -33,7 +33,7 @@
     },
     "scripts": {
         "tests": "phpunit",
-        "test-coverage": "phpunit --coverage-html build/coverage",
+        "test-coverage": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover build/coverage/clover.xml",
         "check-cs": "ecs check",
         "fix-cs": "ecs check --fix",
         "phpstan": "phpstan analyse --ansi"

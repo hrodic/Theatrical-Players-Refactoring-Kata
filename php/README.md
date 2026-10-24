@@ -12,6 +12,25 @@ The kata uses:
 - [PHP 8.0+](https://www.php.net/downloads.php)
 - [Composer](https://getcomposer.org)
 
+* Intl extension:
+
+Within the container
+
+```
+sudo rm -f /etc/apt/sources.list.d/yarn.list
+sudo apt-get update
+sudo apt-get install -y libicu-dev
+sudo docker-php-ext-configure intl
+sudo docker-php-ext-install intl
+sudo docker-php-ext-enable intl
+php -m | grep intl
+```
+
+Troubleshooting
+```
+echo "extension=intl" | sudo tee /usr/local/etc/php/conf.d/docker-php-ext-intl.ini
+```
+
 Recommended:
 
 - [Git](https://git-scm.com/downloads)

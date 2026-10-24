@@ -1,0 +1,23 @@
+{
+  "name": "PHP 8.4 Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/php:1-8.4-bookworm",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "ryanluker.vscode-coverage-gutters",
+        "emallin.phpunit"
+      ],
+      "settings": {
+        "intelephense.telemetry.enabled": false,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        },
+        "phpunit.phpunit": "vendor/bin/phpunit"
+      }
+    }
+  },
+  "postCreateCommand": "composer install",
+  "remoteUser": "vscode"
+}
