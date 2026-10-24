@@ -32,7 +32,7 @@ final class StatementPrinter
     private function createStatement(Invoice $invoice, array $plays): Statement
     {
         $lines = array_map(
-            fn(Performance $performance): StatementLine =>
+            fn (Performance $performance): StatementLine =>
             $this->createStatementLine($performance, $plays),
             $invoice->performances,
         );
@@ -43,42 +43,20 @@ final class StatementPrinter
     private function createStatementLine(Performance $performance, array $plays): StatementLine
     {
         $play = $this->playForPerformance($performance, $plays);
+        $calculator = $this->createCalculator($performance, $play);
         return new StatementLine(
             playName: $play->name,
             audience: $performance->audience,
-            amount: $this->calculatePerformanceAmount($performance, $plays),
-            volumeCredits: $this->calculateVolumeCredits($performance, $plays)
+            amount: $calculator->calculateAmount(),
+            volumeCredits: $calculator->calculateVolumeCredits()
         );
     }
 
-    private function calculatePerformanceAmount(Performance $performance, array $plays): int
+    private function createCalculator(Performance $performance, Play $play): PerformanceCalculator
     {
-        $play = $this->playForPerformance($performance, $plays);
-
         return match ($play->type) {
-            Play::TYPE_TRAGEDY => $this->calculateTragedyAmount($performance),
-            Play::TYPE_COMEDY => $this->calculateComedyAmount($performance),
-            default => $this->throwUnknownTypeError($play->type)
-        };
-    }
-
-    private function calculateTragedyAmount(Performance $performance): int
-    {
-        return new TragedyCalculator($performance)->calculateAmount();
-    }
-
-    private function calculateComedyAmount(Performance $performance): int
-    {
-        return new ComedyCalculator($performance)->calculateAmount();
-    }
-
-    private function calculateVolumeCredits(Performance $performance, array $plays): int
-    {
-        $play = $this->playForPerformance($performance, $plays);
-
-        return match ($play->type) {
-            Play::TYPE_TRAGEDY => new TragedyCalculator($performance)->calculateVolumeCredits(),
-            Play::TYPE_COMEDY => new ComedyCalculator($performance)->calculateVolumeCredits(),
+            Play::TYPE_TRAGEDY => new TragedyCalculator($performance),
+            Play::TYPE_COMEDY => new ComedyCalculator($performance),
             default => $this->throwUnknownTypeError($play->type)
         };
     }

@@ -8,7 +8,8 @@ final readonly class TragedyCalculator implements PerformanceCalculator
 {
     public function __construct(
         private Performance $performance
-    ) {}
+    ) {
+    }
 
     public function calculateAmount(): int
     {
