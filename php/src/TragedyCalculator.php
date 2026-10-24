@@ -4,15 +4,24 @@ declare(strict_types=1);
 
 namespace Theatrical;
 
-final class TragedyCalculator implements PerformanceCalculator
+final readonly class TragedyCalculator implements PerformanceCalculator
 {
+    public function __construct(
+        private Performance $performance
+    ) {}
+
     public function calculateAmount(): int
     {
-        return 0;
+        $amount = 40000;
+        if ($this->performance->audience > 30) {
+            $amount += 1000 * ($this->performance->audience - 30);
+        }
+
+        return $amount;
     }
 
     public function calculateVolumeCredits(): int
     {
-        return 0;
+        return max($this->performance->audience - 30, 0);
     }
 }

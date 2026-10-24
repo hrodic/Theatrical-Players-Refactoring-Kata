@@ -32,7 +32,7 @@ final class StatementPrinter
     private function createStatement(Invoice $invoice, array $plays): Statement
     {
         $lines = array_map(
-            fn (Performance $performance): StatementLine =>
+            fn(Performance $performance): StatementLine =>
             $this->createStatementLine($performance, $plays),
             $invoice->performances,
         );
@@ -58,40 +58,34 @@ final class StatementPrinter
         return match ($play->type) {
             Play::TYPE_TRAGEDY => $this->calculateTragedyAmount($performance),
             Play::TYPE_COMEDY => $this->calculateComedyAmount($performance),
-            default => throw new Error("Unknown type: {$play->type}"),
+            default => $this->throwUnknownTypeError($play->type)
         };
     }
 
     private function calculateTragedyAmount(Performance $performance): int
     {
-        $amount = 40000;
-        if ($performance->audience > 30) {
-            $amount += 1000 * ($performance->audience - 30);
-        }
-
-        return $amount;
+        return new TragedyCalculator($performance)->calculateAmount();
     }
 
     private function calculateComedyAmount(Performance $performance): int
     {
-        $amount = 30000;
-        if ($performance->audience > 20) {
-            $amount += 10000 + 500 * ($performance->audience - 20);
-        }
-
-        return $amount + 300 * $performance->audience;
+        return new ComedyCalculator($performance)->calculateAmount();
     }
 
     private function calculateVolumeCredits(Performance $performance, array $plays): int
     {
         $play = $this->playForPerformance($performance, $plays);
-        $credits = max($performance->audience - 30, 0);
 
-        if ($play->type === 'comedy') {
-            $credits += intdiv($performance->audience, 5);
-        }
+        return match ($play->type) {
+            Play::TYPE_TRAGEDY => new TragedyCalculator($performance)->calculateVolumeCredits(),
+            Play::TYPE_COMEDY => new ComedyCalculator($performance)->calculateVolumeCredits(),
+            default => $this->throwUnknownTypeError($play->type)
+        };
+    }
 
-        return $credits;
+    private function throwUnknownTypeError(string $type): never
+    {
+        throw new Error("Unknown type: {$type}");
     }
 
     private function playForPerformance(Performance $performance, array $plays): Play
