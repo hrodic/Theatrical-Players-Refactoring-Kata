@@ -17,8 +17,8 @@ final class StatementPrinter
             $result .= $this->formatPerformanceLine($performance, $plays);
         }
 
-        $result .= "Amount owed is {$this->formatAsUSD($this->totalAmount($invoice,$plays))}\n";
-        $result .= "You earned {$this->totalVolumeCredits($invoice,$plays)} credits";
+        $result .= "Amount owed is {$this->formatAsUSD($this->totalAmount($invoice, $plays))}\n";
+        $result .= "You earned {$this->totalVolumeCredits($invoice, $plays)} credits";
 
         return $result;
     }
