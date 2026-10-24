@@ -23,18 +23,12 @@ class StatementPrinter
             // lookup the play for this performance
             $play = $plays[$performance->playId];
 
+            // amount for this order
             $performanceAmount = $this->calculatePerformanceAmount($performance, $play);
 
-            // credit rules ---
-            // add volume credits
-            $volumeCredits += max($performance->audience - 30, 0);
-            // add extra credit for every ten comedy attendees
-            if ($play->type === 'comedy') {
-                $volumeCredits += floor($performance->audience / 5);
-            }
-            // end credit rules ---
-
+            $volumeCredits += $this->calculateVolumeCredits($performance, $play);
             // formatting logic: print line for this order
+
             $result .= "  {$play->name}: {$this->formatAsUSD($performanceAmount)} ";
             $result .= "({$performance->audience} seats)\n";
 
@@ -46,29 +40,46 @@ class StatementPrinter
         return $result;
     }
 
+    private function calculateVolumeCredits(Performance $performance, Play $play): int
+    {
+        $volumeCredits = max($performance->audience - 30, 0);
+        if ($play->type === 'comedy') {
+            $volumeCredits += intdiv($performance->audience, 5);
+        }
+        return $volumeCredits;
+    }
+
+    private function calculateTragedyAmount(Performance $performance): int
+    {
+        $amount = 40000;
+        if ($performance->audience > 30) {
+            $amount += 1000 * ($performance->audience - 30);
+        }
+        return $amount;
+    }
+
+    private function calculateComedyAmount(Performance $performance): int
+    {
+        $amount = 30000;
+        if ($performance->audience > 20) {
+            $amount += 10000 + 500 * ($performance->audience - 20);
+        }
+        $amount += 300 * $performance->audience;
+        return $amount;
+    }
+
     private function calculatePerformanceAmount(Performance $performance, Play $play): int
     {
         switch ($play->type) {
             case 'tragedy':
-                $amount = 40000;
-                if ($performance->audience > 30) {
-                    $amount += 1000 * ($performance->audience - 30);
-                }
-                break;
+                return $this->calculateTragedyAmount($performance);
 
             case 'comedy':
-                $amount = 30000;
-                if ($performance->audience > 20) {
-                    $amount += 10000 + 500 * ($performance->audience - 20);
-                }
-                $amount += 300 * $performance->audience;
-                break;
+                return $this->calculateComedyAmount($performance);
 
             default:
                 throw new Error("Unknown type: {$play->type}");
         }
-
-        return $amount;
     }
 
     private function formatAsUSD(int $amount): string
