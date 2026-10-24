@@ -17,9 +17,9 @@ final class StatementPrinterTest extends TestCase
     public function testCanPrintInvoice(): void
     {
         $plays = [
-            'hamlet' => new Play('Hamlet', 'tragedy'),
-            'as-like' => new Play('As You Like It', 'comedy'),
-            'othello' => new Play('Othello', 'tragedy'),
+            'hamlet' => new Play('Hamlet', Play::TYPE_TRAGEDY),
+            'as-like' => new Play('As You Like It', Play::TYPE_COMEDY),
+            'othello' => new Play('Othello', Play::TYPE_TRAGEDY),
         ];
 
         $performances = [
@@ -38,7 +38,7 @@ final class StatementPrinterTest extends TestCase
     {
         $plays = [
             'henry-v' => new Play('Henry V', 'history'),
-            'as-like' => new Play('As You Like It', 'comedy'),
+            'as-like' => new Play('As You Like It', Play::TYPE_COMEDY),
         ];
 
         $performances = [new Performance('henry-v', 53), new Performance('as-like', 55)];

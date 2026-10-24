@@ -6,6 +6,10 @@ namespace Theatrical;
 
 class Play implements \Stringable
 {
+    public const string TYPE_COMEDY = 'comedy';
+
+    public const string TYPE_TRAGEDY = 'tragedy';
+
     public function __construct(
         public string $name,
         public string $type

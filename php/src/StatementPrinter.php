@@ -32,7 +32,7 @@ final class StatementPrinter
     private function createStatement(Invoice $invoice, array $plays): Statement
     {
         $lines = array_map(
-            fn(Performance $performance): StatementLine =>
+            fn (Performance $performance): StatementLine =>
             $this->createStatementLine($performance, $plays),
             $invoice->performances,
         );
@@ -56,8 +56,8 @@ final class StatementPrinter
         $play = $this->playForPerformance($performance, $plays);
 
         return match ($play->type) {
-            'tragedy' => $this->calculateTragedyAmount($performance),
-            'comedy' => $this->calculateComedyAmount($performance),
+            Play::TYPE_TRAGEDY => $this->calculateTragedyAmount($performance),
+            Play::TYPE_COMEDY => $this->calculateComedyAmount($performance),
             default => throw new Error("Unknown type: {$play->type}"),
         };
     }
