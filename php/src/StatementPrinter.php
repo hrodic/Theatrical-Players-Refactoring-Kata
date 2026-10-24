@@ -9,9 +9,6 @@ use NumberFormatter;
 
 final class StatementPrinter
 {
-    /**
-     * @param array<string, Play> $plays
-     */
     public function print(Invoice $invoice, array $plays): string
     {
         $result = "Statement for {$invoice->customer}\n";
@@ -20,8 +17,8 @@ final class StatementPrinter
             $result .= $this->formatPerformanceLine($performance, $plays);
         }
 
-        $result .= "Amount owed is {$this->formatAsUSD($this->totalAmount($invoice, $plays))}\n";
-        $result .= "You earned {$this->totalVolumeCredits($invoice, $plays)} credits";
+        $result .= "Amount owed is {$this->formatAsUSD($this->totalAmount($invoice,$plays))}\n";
+        $result .= "You earned {$this->totalVolumeCredits($invoice,$plays)} credits";
 
         return $result;
     }
